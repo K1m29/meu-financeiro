@@ -1,47 +1,244 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 export default function App() {
+  // 1. Estado para guardar a lista de transações dinâmicas
+  const [transacoes, setTransacoes] = useState([
+    { id: 1, descricao: 'Salário de Outubro', categoria: 'Rendimento', data: '05/10/2026', valor: 7500.00, tipo: 'entrada' },
+    { id: 2, descricao: 'Supermercado', categoria: 'Alimentação', data: '06/10/2026', valor: 450.00, tipo: 'saida' },
+    { id: 3, descricao: 'Conta de Luz', categoria: 'Contas Fixas', data: '07/10/2026', valor: 180.00, tipo: 'saida' },
+    { id: 4, descricao: 'Assinatura Streaming', categoria: 'Lazer', data: '08/10/2026', valor: 49.90, tipo: 'saida' },
+  ])
+
+  // 2. Estado para controlar se o Modal está aberto ou fechado
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // 3. Estados para capturar os dados do formulário
+  const [descricao, setDescricao] = useState('')
+  const [valor, setValor] = useState('')
+  const [categoria, setCategoria] = useState('')
+  const [tipo, setTipo] = useState('saida')
+
+  // 4. Cálculos dinâmicos de Entradas, Saídas e Saldo Total
+  const totalEntradas = transacoes
+    .filter(t => t.tipo === 'entrada')
+    .reduce((acc, t) => acc + t.valor, 0)
+
+  const totalSaidas = transacoes
+    .filter(t => t.tipo === 'saida')
+    .reduce((acc, t) => acc + t.valor, 0)
+
+  const saldoTotal = totalEntradas - totalSaidas
+
+  // 5. Função para adicionar uma nova transação
+  const handleAddTransacao = (e) => {
+    e.preventDefault()
+
+    if (!descricao || !valor || !categoria) {
+      alert('Por favor, preencha todos os campos!')
+      return
+    }
+
+    const novaTransacao = {
+      id: Date.now(),
+      descricao,
+      categoria,
+      data: new Date().toLocaleDateString('pt-BR'),
+      valor: parseFloat(valor),
+      tipo,
+    }
+
+    // Adiciona a nova transação no início da lista
+    setTransacoes([novaTransacao, ...transacoes])
+
+    // Limpa o formulário e fecha o modal
+    setDescricao('')
+    setValor('')
+    setCategoria('')
+    setTipo('saida')
+    setIsModalOpen(false)
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100 p-8 text-gray-800">
+    <div className="min-h-screen bg-gray-950 p-8 text-gray-100 font-sans">
       <header className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Meu Financeiro</h1>
-          <p className="text-sm text-gray-500">Visão geral do seu patrimônio e transações</p>
+          <h1 className="text-3xl font-bold text-white">Meu Financeiro</h1>
+          <p className="text-sm text-gray-400">Visão geral do seu patrimônio e transações</p>
         </div>
-        <button className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 transition-colors">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-500 transition-colors cursor-pointer"
+        >
           + Nova Transação
         </button>
       </header>
 
       {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3 mb-8">
         {/* Card Saldo Total */}
-        <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-100">
-          <p className="text-sm font-medium text-gray-500">Saldo Total</p>
-          <h2 className="mt-2 text-3xl font-bold text-gray-900">R$ 5.420,00</h2>
-          <span className="mt-2 inline-block rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-800">
-            Atualizado hoje
+        <div className="rounded-xl bg-gray-900 p-6 shadow-sm border border-gray-800">
+          <p className="text-sm font-medium text-gray-400">Saldo Total</p>
+          <h2 className="mt-2 text-3xl font-bold text-white">
+            R$ {saldoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </h2>
+          <span className="mt-2 inline-block rounded-full bg-blue-950 px-2.5 py-0.5 text-xs font-semibold text-blue-400 border border-blue-800">
+            Calculado automaticamente
           </span>
         </div>
 
         {/* Card Entradas */}
-        <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-100">
-          <p className="text-sm font-medium text-gray-500">Entradas no Mês</p>
-          <h2 className="mt-2 text-3xl font-bold text-emerald-600">+ R$ 7.500,00</h2>
-          <span className="mt-2 inline-block rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
-            + 12% em relação ao mês anterior
+        <div className="rounded-xl bg-gray-900 p-6 shadow-sm border border-gray-800">
+          <p className="text-sm font-medium text-gray-400">Entradas no Mês</p>
+          <h2 className="mt-2 text-3xl font-bold text-emerald-400">
+            + R$ {totalEntradas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </h2>
+          <span className="mt-2 inline-block rounded-full bg-emerald-950 px-2.5 py-0.5 text-xs font-semibold text-emerald-400 border border-emerald-800">
+            Total de ganhos
           </span>
         </div>
 
         {/* Card Saídas */}
-        <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-100">
-          <p className="text-sm font-medium text-gray-500">Saídas no Mês</p>
-          <h2 className="mt-2 text-3xl font-bold text-rose-600">- R$ 2.080,00</h2>
-          <span className="mt-2 inline-block rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-800">
-            Dentro da meta prevista
+        <div className="rounded-xl bg-gray-900 p-6 shadow-sm border border-gray-800">
+          <p className="text-sm font-medium text-gray-400">Saídas no Mês</p>
+          <h2 className="mt-2 text-3xl font-bold text-rose-500">
+            - R$ {totalSaidas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </h2>
+          <span className="mt-2 inline-block rounded-full bg-rose-950 px-2.5 py-0.5 text-xs font-semibold text-rose-400 border border-rose-800">
+            Total de despesas
           </span>
         </div>
       </div>
+
+      {/* Tabela de Transações Recentes */}
+      <div className="rounded-xl bg-gray-900 border border-gray-800 p-6">
+        <h3 className="text-xl font-bold text-white mb-4">Transações Recentes</h3>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-gray-300">
+            <thead className="bg-gray-800/50 text-xs uppercase text-gray-400 border-b border-gray-800">
+              <tr>
+                <th className="px-4 py-3">Descrição</th>
+                <th className="px-4 py-3">Categoria</th>
+                <th className="px-4 py-3">Data</th>
+                <th className="px-4 py-3 text-right">Valor</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-800">
+              {transacoes.map((item) => (
+                <tr key={item.id} className="hover:bg-gray-800/30 transition-colors">
+                  <td className="px-4 py-4 font-medium text-white">{item.descricao}</td>
+                  <td className="px-4 py-4">
+                    <span className="rounded-md bg-gray-800 px-2.5 py-1 text-xs text-gray-300">
+                      {item.categoria}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 text-gray-400">{item.data}</td>
+                  <td className={`px-4 py-4 text-right font-semibold ${item.tipo === 'entrada' ? 'text-emerald-400' : 'text-rose-500'}`}>
+                    {item.tipo === 'entrada' ? '+' : '-'} R$ {item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* MODAL DE NOVA TRANSAÇÃO */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-gray-900 border border-gray-800 p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-white">Nova Transação</h3>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-white cursor-pointer text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleAddTransacao} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Descrição</label>
+                <input 
+                  type="text" 
+                  placeholder="Ex: Mercadinho, Freelance..."
+                  value={descricao}
+                  onChange={(e) => setDescricao(e.target.value)}
+                  className="w-full rounded-lg bg-gray-800 border border-gray-700 p-2.5 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Valor (R$)</label>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  placeholder="0.00"
+                  value={valor}
+                  onChange={(e) => setValor(e.target.value)}
+                  className="w-full rounded-lg bg-gray-800 border border-gray-700 p-2.5 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Categoria</label>
+                <input 
+                  type="text" 
+                  placeholder="Ex: Alimentação, Lazer, Salário..."
+                  value={categoria}
+                  onChange={(e) => setCategoria(e.target.value)}
+                  className="w-full rounded-lg bg-gray-800 border border-gray-700 p-2.5 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Tipo de Movimentação</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setTipo('entrada')}
+                    className={`rounded-lg py-2 text-sm font-semibold cursor-pointer border transition-colors ${
+                      tipo === 'entrada' 
+                        ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500' 
+                        : 'bg-gray-800 text-gray-400 border-gray-700 hover:bg-gray-750'
+                    }`}
+                  >
+                    + Entrada
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTipo('saida')}
+                    className={`rounded-lg py-2 text-sm font-semibold cursor-pointer border transition-colors ${
+                      tipo === 'saida' 
+                        ? 'bg-rose-600/20 text-rose-400 border-rose-500' 
+                        : 'bg-gray-800 text-gray-400 border-gray-700 hover:bg-gray-750'
+                    }`}
+                  >
+                    - Saída
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 cursor-pointer transition-colors"
+                >
+                  Salvar Transação
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
