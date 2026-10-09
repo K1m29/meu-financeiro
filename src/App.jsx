@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
 
 export default function App() {
   const transacoesIniciais = [
@@ -22,7 +23,7 @@ export default function App() {
     return transacoesIniciais
   })
 
-  // 1. Novos Estados para Filtro e Pesquisa
+  // Estados para Filtro e Pesquisa
   const [busca, setBusca] = useState('')
   const [filtroTipo, setFiltroTipo] = useState('todos') // 'todos' | 'entrada' | 'saida'
 
@@ -48,7 +49,23 @@ export default function App() {
 
   const saldoTotal = totalEntradas - totalSaidas
 
-  // 2. Lógica para filtrar as transações em tempo real
+  // Agrupamento de dados para o Gráfico de Gastos por Categoria
+  const dadosGrafico = transacoes
+    .filter(t => t.tipo === 'saida')
+    .reduce((acc, item) => {
+      const categoriaExistente = acc.find(c => c.name.toLowerCase() === item.categoria.toLowerCase())
+      if (categoriaExistente) {
+        categoriaExistente.value += item.valor
+      } else {
+        acc.push({ name: item.categoria, value: item.valor })
+      }
+      return acc
+    }, [])
+
+  // Paleta de cores para o gráfico
+  const CORES_GRAFICO = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4']
+
+  // Lógica para filtrar as transações em tempo real
   const transacoesFiltradas = transacoes.filter((item) => {
     const atendeFiltroTipo = 
       filtroTipo === 'todos' ? true : item.tipo === filtroTipo
@@ -139,12 +156,46 @@ export default function App() {
         </div>
       </div>
 
+      {/* Seção do Gráfico de Distribuição de Despesas */}
+      <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 mb-8">
+        <h3 className="text-xl font-bold text-white mb-2">Distribuição de Gastos por Categoria</h3>
+        <p className="text-xs text-gray-400 mb-4">Acompanhe visualmente as maiores categorias de despesas</p>
+        
+        {dadosGrafico.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-8">Nenhuma despesa registrada para exibir no gráfico.</p>
+        ) : (
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={dadosGrafico}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={90}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {dadosGrafico.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={CORES_GRAFICO[index % CORES_GRAFICO.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                  contentStyle={{ backgroundColor: '#111827', borderColor: '#374151', borderRadius: '0.5rem', color: '#fff' }}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+
       {/* Tabela com Filtro e Pesquisa */}
       <div className="rounded-xl bg-gray-900 border border-gray-800 p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
           <h3 className="text-xl font-bold text-white">Transações Recentes</h3>
           
-          {/* BARRA DE PESQUISA E BOTÕES DE FILTRO */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <input 
               type="text"
