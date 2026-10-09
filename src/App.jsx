@@ -107,20 +107,54 @@ export default function App() {
     const listaFiltrada = transacoes.filter(item => item.id !== id)
     setTransacoes(listaFiltrada)
   }
+// Função para exportar as transações filtradas para CSV
+  const exportarCSV = () => {
+    if (transacoesFiltradas.length === 0) {
+      alert('Não há transações para exportar!')
+      return
+    }
 
+    const cabecalhos = ['Descrição', 'Categoria', 'Data', 'Tipo', 'Valor (R$)']
+    const linhas = transacoesFiltradas.map(t => [
+      `"${t.descricao}"`,
+      `"${t.categoria}"`,
+      `"${t.data}"`,
+      `"${t.tipo}"`,
+      t.valor.toFixed(2)
+    ])
+
+    const conteudoCSV = [cabecalhos.join(','), ...linhas.map(l => l.join(','))].join('\n')
+    const blob = new Blob([conteudoCSV], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    
+    const link = document.createElement('a')
+    link.setAttribute('href', url)
+    link.setAttribute('download', `extrato_financeiro_${new Date().toLocaleDateString('pt-BR')}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
   return (
     <div className="min-h-screen bg-gray-950 p-8 text-gray-100 font-sans">
       <header className="mb-8 flex items-center justify-between">
-        <div>
+ <div>
           <h1 className="text-3xl font-bold text-white">Meu Financeiro</h1>
           <p className="text-sm text-gray-400">Visão geral do seu patrimônio e transações</p>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-500 transition-colors cursor-pointer"
-        >
-          + Nova Transação
-        </button>
+        <div className="flex gap-3">
+          <button 
+            onClick={exportarCSV}
+            className="rounded-lg bg-gray-800 border border-gray-700 px-4 py-2 font-medium text-gray-200 hover:bg-gray-700 transition-colors cursor-pointer text-sm"
+          >
+            📥 Exportar CSV
+          </button>
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-500 transition-colors cursor-pointer text-sm"
+          >
+            + Nova Transação
+          </button>
+        </div>
       </header>
 
       {/* Cards de Resumo */}
