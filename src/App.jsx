@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 
 export default function App() {
-  // Dados padrão para a primeira vez que o usuário acessar a aplicação
   const transacoesIniciais = [
     { id: 1, descricao: 'Salário de Outubro', categoria: 'Rendimento', data: '05/10/2026', valor: 7500.00, tipo: 'entrada' },
     { id: 2, descricao: 'Supermercado', categoria: 'Alimentação', data: '06/10/2026', valor: 450.00, tipo: 'saida' },
@@ -9,7 +8,7 @@ export default function App() {
     { id: 4, descricao: 'Assinatura Streaming', categoria: 'Lazer', data: '08/10/2026', valor: 49.90, tipo: 'saida' },
   ]
 
-  // 1. Inicializa o estado buscando o que já está salvo no localStorage
+  // Estado das transações no localStorage
   const [transacoes, setTransacoes] = useState(() => {
     const dadosSalvos = localStorage.getItem('meu_financeiro_transacoes')
     if (dadosSalvos) {
@@ -23,21 +22,22 @@ export default function App() {
     return transacoesIniciais
   })
 
-  // 2. Salva no localStorage sempre que a lista de transações for alterada
+  // 1. Novos Estados para Filtro e Pesquisa
+  const [busca, setBusca] = useState('')
+  const [filtroTipo, setFiltroTipo] = useState('todos') // 'todos' | 'entrada' | 'saida'
+
   useEffect(() => {
     localStorage.setItem('meu_financeiro_transacoes', JSON.stringify(transacoes))
   }, [transacoes])
 
-  // Estados para controlar o Modal
+  // Estados do Modal e Formulário
   const [isModalOpen, setIsModalOpen] = useState(false)
-
-  // Estados para o formulário
   const [descricao, setDescricao] = useState('')
   const [valor, setValor] = useState('')
   const [categoria, setCategoria] = useState('')
   const [tipo, setTipo] = useState('saida')
 
-  // Cálculos dinâmicos
+  // Cálculos dinâmicos gerais
   const totalEntradas = transacoes
     .filter(t => t.tipo === 'entrada')
     .reduce((acc, t) => acc + t.valor, 0)
@@ -48,7 +48,18 @@ export default function App() {
 
   const saldoTotal = totalEntradas - totalSaidas
 
-  // Função para adicionar nova transação
+  // 2. Lógica para filtrar as transações em tempo real
+  const transacoesFiltradas = transacoes.filter((item) => {
+    const atendeFiltroTipo = 
+      filtroTipo === 'todos' ? true : item.tipo === filtroTipo
+
+    const atendeBusca = 
+      item.descricao.toLowerCase().includes(busca.toLowerCase()) ||
+      item.categoria.toLowerCase().includes(busca.toLowerCase())
+
+    return atendeFiltroTipo && atendeBusca
+  })
+
   const handleAddTransacao = (e) => {
     e.preventDefault()
 
@@ -75,7 +86,6 @@ export default function App() {
     setIsModalOpen(false)
   }
 
-  // Função para remover uma transação pelo ID
   const handleRemoveTransacao = (id) => {
     const listaFiltrada = transacoes.filter(item => item.id !== id)
     setTransacoes(listaFiltrada)
@@ -98,7 +108,6 @@ export default function App() {
 
       {/* Cards de Resumo */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3 mb-8">
-        {/* Card Saldo Total */}
         <div className="rounded-xl bg-gray-900 p-6 shadow-sm border border-gray-800">
           <p className="text-sm font-medium text-gray-400">Saldo Total</p>
           <h2 className="mt-2 text-3xl font-bold text-white">
@@ -109,7 +118,6 @@ export default function App() {
           </span>
         </div>
 
-        {/* Card Entradas */}
         <div className="rounded-xl bg-gray-900 p-6 shadow-sm border border-gray-800">
           <p className="text-sm font-medium text-gray-400">Entradas no Mês</p>
           <h2 className="mt-2 text-3xl font-bold text-emerald-400">
@@ -120,7 +128,6 @@ export default function App() {
           </span>
         </div>
 
-        {/* Card Saídas */}
         <div className="rounded-xl bg-gray-900 p-6 shadow-sm border border-gray-800">
           <p className="text-sm font-medium text-gray-400">Saídas no Mês</p>
           <h2 className="mt-2 text-3xl font-bold text-rose-500">
@@ -132,9 +139,49 @@ export default function App() {
         </div>
       </div>
 
-      {/* Tabela de Transações Recentes */}
+      {/* Tabela com Filtro e Pesquisa */}
       <div className="rounded-xl bg-gray-900 border border-gray-800 p-6">
-        <h3 className="text-xl font-bold text-white mb-4">Transações Recentes</h3>
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+          <h3 className="text-xl font-bold text-white">Transações Recentes</h3>
+          
+          {/* BARRA DE PESQUISA E BOTÕES DE FILTRO */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <input 
+              type="text"
+              placeholder="Pesquisar por nome ou categoria..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="rounded-lg bg-gray-800 border border-gray-700 px-3.5 py-2 text-sm text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none w-full sm:w-64"
+            />
+
+            <div className="flex rounded-lg bg-gray-800 p-1 border border-gray-700">
+              <button
+                onClick={() => setFiltroTipo('todos')}
+                className={`rounded-md px-3 py-1 text-xs font-medium cursor-pointer transition-colors ${
+                  filtroTipo === 'todos' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Todas
+              </button>
+              <button
+                onClick={() => setFiltroTipo('entrada')}
+                className={`rounded-md px-3 py-1 text-xs font-medium cursor-pointer transition-colors ${
+                  filtroTipo === 'entrada' ? 'bg-emerald-600/30 text-emerald-400' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Entradas
+              </button>
+              <button
+                onClick={() => setFiltroTipo('saida')}
+                className={`rounded-md px-3 py-1 text-xs font-medium cursor-pointer transition-colors ${
+                  filtroTipo === 'saida' ? 'bg-rose-600/30 text-rose-400' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Saídas
+              </button>
+            </div>
+          </div>
+        </div>
         
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-gray-300">
@@ -148,14 +195,14 @@ export default function App() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800">
-              {transacoes.length === 0 ? (
+              {transacoesFiltradas.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
-                    Nenhuma transação cadastrada. Crie uma clicando em "+ Nova Transação".
+                    Nenhuma transação encontrada.
                   </td>
                 </tr>
               ) : (
-                transacoes.map((item) => (
+                transacoesFiltradas.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-800/30 transition-colors">
                     <td className="px-4 py-4 font-medium text-white">{item.descricao}</td>
                     <td className="px-4 py-4">
