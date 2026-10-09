@@ -1,24 +1,43 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 export default function App() {
-  // 1. Estado para guardar a lista de transações dinâmicas
-  const [transacoes, setTransacoes] = useState([
+  // Dados padrão para a primeira vez que o usuário acessar a aplicação
+  const transacoesIniciais = [
     { id: 1, descricao: 'Salário de Outubro', categoria: 'Rendimento', data: '05/10/2026', valor: 7500.00, tipo: 'entrada' },
     { id: 2, descricao: 'Supermercado', categoria: 'Alimentação', data: '06/10/2026', valor: 450.00, tipo: 'saida' },
     { id: 3, descricao: 'Conta de Luz', categoria: 'Contas Fixas', data: '07/10/2026', valor: 180.00, tipo: 'saida' },
     { id: 4, descricao: 'Assinatura Streaming', categoria: 'Lazer', data: '08/10/2026', valor: 49.90, tipo: 'saida' },
-  ])
+  ]
 
-  // 2. Estado para controlar se o Modal está aberto ou fechado
+  // 1. Inicializa o estado buscando o que já está salvo no localStorage
+  const [transacoes, setTransacoes] = useState(() => {
+    const dadosSalvos = localStorage.getItem('meu_financeiro_transacoes')
+    if (dadosSalvos) {
+      try {
+        return JSON.parse(dadosSalvos)
+      } catch (e) {
+        console.error('Erro ao carregar do localStorage', e)
+        return transacoesIniciais
+      }
+    }
+    return transacoesIniciais
+  })
+
+  // 2. Salva no localStorage sempre que a lista de transações for alterada
+  useEffect(() => {
+    localStorage.setItem('meu_financeiro_transacoes', JSON.stringify(transacoes))
+  }, [transacoes])
+
+  // Estados para controlar o Modal
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // 3. Estados para capturar os dados do formulário
+  // Estados para o formulário
   const [descricao, setDescricao] = useState('')
   const [valor, setValor] = useState('')
   const [categoria, setCategoria] = useState('')
   const [tipo, setTipo] = useState('saida')
 
-  // 4. Cálculos dinâmicos de Entradas, Saídas e Saldo Total
+  // Cálculos dinâmicos
   const totalEntradas = transacoes
     .filter(t => t.tipo === 'entrada')
     .reduce((acc, t) => acc + t.valor, 0)
@@ -29,7 +48,7 @@ export default function App() {
 
   const saldoTotal = totalEntradas - totalSaidas
 
-  // 5. Função para adicionar uma nova transação
+  // Função para adicionar nova transação
   const handleAddTransacao = (e) => {
     e.preventDefault()
 
@@ -47,15 +66,19 @@ export default function App() {
       tipo,
     }
 
-    // Adiciona a nova transação no início da lista
     setTransacoes([novaTransacao, ...transacoes])
 
-    // Limpa o formulário e fecha o modal
     setDescricao('')
     setValor('')
     setCategoria('')
     setTipo('saida')
     setIsModalOpen(false)
+  }
+
+  // Função para remover uma transação pelo ID
+  const handleRemoveTransacao = (id) => {
+    const listaFiltrada = transacoes.filter(item => item.id !== id)
+    setTransacoes(listaFiltrada)
   }
 
   return (
@@ -82,7 +105,7 @@ export default function App() {
             R$ {saldoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </h2>
           <span className="mt-2 inline-block rounded-full bg-blue-950 px-2.5 py-0.5 text-xs font-semibold text-blue-400 border border-blue-800">
-            Calculado automaticamente
+            Salvo localmente
           </span>
         </div>
 
@@ -121,23 +144,41 @@ export default function App() {
                 <th className="px-4 py-3">Categoria</th>
                 <th className="px-4 py-3">Data</th>
                 <th className="px-4 py-3 text-right">Valor</th>
+                <th className="px-4 py-3 text-center">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800">
-              {transacoes.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-800/30 transition-colors">
-                  <td className="px-4 py-4 font-medium text-white">{item.descricao}</td>
-                  <td className="px-4 py-4">
-                    <span className="rounded-md bg-gray-800 px-2.5 py-1 text-xs text-gray-300">
-                      {item.categoria}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4 text-gray-400">{item.data}</td>
-                  <td className={`px-4 py-4 text-right font-semibold ${item.tipo === 'entrada' ? 'text-emerald-400' : 'text-rose-500'}`}>
-                    {item.tipo === 'entrada' ? '+' : '-'} R$ {item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {transacoes.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
+                    Nenhuma transação cadastrada. Crie uma clicando em "+ Nova Transação".
                   </td>
                 </tr>
-              ))}
+              ) : (
+                transacoes.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-800/30 transition-colors">
+                    <td className="px-4 py-4 font-medium text-white">{item.descricao}</td>
+                    <td className="px-4 py-4">
+                      <span className="rounded-md bg-gray-800 px-2.5 py-1 text-xs text-gray-300">
+                        {item.categoria}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-gray-400">{item.data}</td>
+                    <td className={`px-4 py-4 text-right font-semibold ${item.tipo === 'entrada' ? 'text-emerald-400' : 'text-rose-500'}`}>
+                      {item.tipo === 'entrada' ? '+' : '-'} R$ {item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <button
+                        onClick={() => handleRemoveTransacao(item.id)}
+                        className="rounded-lg bg-rose-500/10 p-2 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 transition-colors cursor-pointer"
+                        title="Excluir Transação"
+                      >
+                        🗑️
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
