@@ -1,16 +1,33 @@
-p# React + Vite
+# 💰 Meu Financeiro
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Aplicação web para gerenciamento de finanças pessoais desenvolvida com React e Tailwind CSS. O projeto permite acompanhar saldo, receita e despesas em tempo real com visualização gráfica e suporte a exportação de relatórios.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Funcionalidades
 
-## React Compiler
+- **Dashboard Financeiro**: Visualização dinâmica do Saldo Total, Entradas e Saídas do mês.
+- **Gráfico Dinâmico**: Distribuição de despesas agrupadas por categoria utilizando a biblioteca Recharts.
+- **Gestão de Transações**:
+  - Adição de novos lançamentos via modal responsivo.
+  - Exclusão de transações com atualização automática dos saldos.
+  - Busca por descrição/categoria e filtros por tipo (Todas, Entradas e Saídas).
+- **Persistência Local**: Todos os dados são salvos no `localStorage` do navegador.
+- **Relatório CSV**: Exportação do extrato financeiro filtrado em formato `.csv`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the Oxlint configuration
+## 🛠️ Tecnologias Utilizadas
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+- **React 19**: Biblioteca para construção de interfaces.
+- **Vite 6**: Bundler e ambiente de desenvolvimento ultra-rápido.
+- **Tailwind CSS v4**: Estilização moderna baseada em utilitários (*Dark Mode*).
+- **Recharts**: Biblioteca para renderização de gráficos em SVG.
+
+---
+
+## 🔧 Como Rodar o Projeto Localmente
+
+1. **Clone o repositório:**
+   ```bash
+   git clone [https://github.com/K1m29/meu-financeiro.git](https://github.com/K1m29/meu-financeiro.git)
